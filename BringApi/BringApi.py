@@ -37,12 +37,12 @@ class BringApi:
 			self.bringUUID = uuid
 			self.bringListUUID = bringuuid
 		self.headers = {    'X-BRING-API-KEY': 'cof4Nc6D8saplXjE3h3HXqHH8m7VU2i1Gs0g85Sp',
-		                    'X-BRING-CLIENT': 'android',
+		                    'X-BRING-CLIENT': 'webApp',
 		                    'X-BRING-USER-UUID': self.bringUUID,
 		                    'X-BRING-VERSION': '303070050',
 		                    'X-BRING-COUNTRY': 'de' }
 		self.addheaders = { 'X-BRING-API-KEY': 'cof4Nc6D8saplXjE3h3HXqHH8m7VU2i1Gs0g85Sp',
-		                    'X-BRING-CLIENT': 'android',
+		                    'X-BRING-CLIENT': 'webApp',
 		                    'X-BRING-USER-UUID': self.bringUUID,
 		                    'X-BRING-VERSION': '303070050',
 		                    'X-BRING-COUNTRY': 'de',
@@ -67,8 +67,10 @@ class BringApi:
 
 		if locale:
 			transl = BringApi.loadTranslations(locale)
+            		# Store items that have to be bought in list as 'purchase'
 			for item in items['purchase']:
 				item['name'] = transl.get(item['name']) or item['name']
+			# Store already bought items in list as 'recently'
 			for item in items['recently']:
 				item['name'] = transl.get(item['name']) or item['name']
 		return items
@@ -116,13 +118,14 @@ class BringApi:
 
 	#load all list infos
 	def load_lists(self):
-		return requests.get(f'{self._bringRestURL}bringusers/{self.bringUUID}/lists', headers=self.headers)
+		return requests.get(f'{self._bringRestURL}bringusers/{self.bringUUID}/lists',
+				    headers=self.headers).json()['lists']
 
 
 	#get list of all users in list ID
 	def get_users_from_list(self, listUUID):
-		return requests.get(f'{self._bringRestURL}bringlists/{listUUID}/users', headers=self.headers)
-
+		return requests.get(f'{self._bringRestURL}bringlists/{listUUID}/users',
+				    headers=self.headers).json()['users']
 
 	#get settings from user
 	def get_user_settings(self):
@@ -148,3 +151,11 @@ class BringApi:
 	@classmethod
 	def loadCatalog(cls, locale):
 		return requests.get(f'https://web.getbring.com/locale/catalog.{locale}.json')
+	
+	# Get UUID of actual list in use
+	def get_list_uuid(self):
+	return self.bringListUUID
+
+	# Set UUID of actual list in use
+	def set_list_uuid(self, uuid):
+	self.bringListUUID = uuid
